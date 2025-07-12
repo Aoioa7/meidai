@@ -1,55 +1,76 @@
 #include <stdio.h>
 #include <math.h>
-void main(){
-int j,k,kk,n;
-float lmd,alp,bet,pi,h,dt,x,t;
-float u[100][100],ue[100][100];
-FILE *fp;
-lmd=1.0;
-alp=0.0;
-bet=0.0;
-pi=3.14159;
-n=9;
-h=0.1;
-dt=0.005;
-kk=5;
-for(j=0;j<n+2;j++)
-for(k=0;k<kk+1;k++)
-u[j][k]=0.0;
-for(j=1;j<n+1;j++){
-x=h*(float)j;
-u[j][0]=sin(pi*x);
-}
-for(k=0;k<kk+1;k++){
-u[0][k+1]=alp;
-u[n+1][k+1]=bet;
-for(j=1;j<n+1;j++)
-u[j][k+1]=u[j][k]+lmd*dt/h/h*(u[j-1][k]-2.0*u[j][k]+u[j+1][k]);
-}
-for(k=0;k<kk+1;k++){
-t=k*dt;
-for(j=0;j<n+2;j++){
-x=h*(float)j;
-ue[j][k]=exp(-pi*pi*t)*sin(pi*x);
-}
-}
-fp=fopen("result_600.dat","w");
-fprintf(fp," k ");
-for(k=0;k<kk+1;k++)
-fprintf(fp,"%2d ",k);
-fprintf(fp,"解析解(k=4)¥n");
-for(j=0;j<n+2;j++){
-fprintf(fp,"j=%2d ",j);
-for(k=0;k<kk+1;k++){
-fprintf(fp,"%8.4f",u[j][k]);
-}
-fprintf(fp,"%8.4f¥n",ue[j][kk]);
-}
-fclose(fp);
-for(j=0;j<n+2;j++){
-printf(" j= %2d",j);
-for(k=0;k<kk+1;k++)
-printf("%8.4f",u[j][k]);
-printf("¥n");
-}
+
+// マクロ化
+#define N   9              
+#define H   0.1            
+#define DT  0.005          
+#define KK  60             
+#define PI  3.141592653589793
+
+int main(void) {
+    // doubleにして精度を上げる
+    double u[N+2][KK+1];
+    double ue[N+2][KK+1];
+    double lmd = 1.0, alp = 0.0, bet = 0.0;
+    FILE *fp;
+    int j, k;
+
+    for (j = 0; j < N+2; j++) {
+        for (k = 0; k <= KK; k++) {
+            u[j][k] = 0.0;
+        }
+    }
+
+    for (j = 1; j <= N; j++) {
+        double x = j * H;
+        u[j][0] = sin(PI * x);
+    }
+
+    for (k = 0; k < KK; k++) {
+        u[0][k+1]   = alp;
+        u[N+1][k+1] = bet;
+        for (j = 1; j <= N; j++) {
+            u[j][k+1] = u[j][k]
+                      + lmd * DT / (H * H)
+                      * (u[j-1][k] - 2.0 * u[j][k] + u[j+1][k]);
+        }
+    }
+
+    for (k = 0; k <= KK; k++) {
+        double t = k * DT;
+        for (j = 0; j < N+2; j++) {
+            double x = j * H;
+            ue[j][k] = exp(-PI * PI * t) * sin(PI * x);
+        }
+    }
+
+    int idx[] = {0, 10, 20, 30, 40, 50, 60};
+    int nidx = sizeof(idx) / sizeof(idx[0]);
+
+    fp = fopen("result_600.dat", "w");
+    fprintf(fp, " k ");
+    for (int i = 0; i < nidx; i++) {
+        fprintf(fp, "%2d ", idx[i]);
+    }
+    fprintf(fp, "解析解(k=%d)\n", idx[nidx-1]);
+
+    for (j = 0; j < N+2; j++) {
+        fprintf(fp, "j=%2d ", j);
+        for (int i = 0; i < nidx; i++) {
+            fprintf(fp, "%8.4f", u[j][ idx[i] ]);
+        }
+        fprintf(fp, "%8.4f\n", ue[j][ idx[nidx-1] ]);
+    }
+    fclose(fp);
+
+    for (j = 0; j < N+2; j++) {
+        printf(" j= %2d", j);
+        for (int i = 0; i < nidx; i++) {
+            printf("%8.4f", u[j][ idx[i] ]);
+        }
+        printf("\n");
+    }
+
+    return 0;
 }
